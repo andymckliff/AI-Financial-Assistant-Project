@@ -1,1 +1,1242 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>Assistant Bancaire</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f7f7f9;
+      --card: rgba(255,255,255,0.9);
+      --border: rgba(0,0,0,0.08);
+      --text: #090909;
+      --muted: #6d6f78;
+      --accent: #111;
+      --accent-strong: #000;
+      --blur-bg: rgba(255,255,255,0.6);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #050505;
+        --card: rgba(15,15,15,0.85);
+        --border: rgba(255,255,255,0.08);
+        --text: #f1f1f1;
+        --muted: #9a9a9a;
+        --accent: #f1f1f1;
+        --accent-strong: #fff;
+        --blur-bg: rgba(20,20,20,0.7);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      display: flex;
+      justify-content: center;
+      padding: 36px 12px;
+    }
+
+    .app {
+      width: min(1200px, 95vw);
+      height: 90vh;
+      background: var(--card);
+      border-radius: 26px;
+      border: 1px solid var(--border);
+      box-shadow: 0 40px 80px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      padding: 30px;
+      backdrop-filter: blur(20px);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .branding h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .branding p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .endpoint label {
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .endpoint input {
+      width: 260px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--blur-bg);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .nav {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .nav button {
+      flex: 1;
+      border: 1px solid var(--border);
+      background: var(--blur-bg);
+      color: var(--muted);
+      padding: 10px 0;
+      border-radius: 18px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.2s;
+      backdrop-filter: blur(12px);
+    }
+
+    .nav button.active {
+      background: var(--accent-strong);
+      color: var(--bg);
+      border-color: transparent;
+      box-shadow: 0 12px 25px rgba(0,0,0,0.2);
+    }
+
+    /* Menu hamburger pour mobile */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 8px;
+      background: var(--blur-bg);
+      border: 1px solid var(--border);
+      z-index: 1002;
+      position: relative;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .hamburger span {
+      width: 24px;
+      height: 2px;
+      background: var(--text);
+      transition: 0.3s;
+      border-radius: 2px;
+    }
+
+    .hamburger.active span:nth-child(1) {
+      transform: rotate(45deg) translate(6px, 6px);
+    }
+
+    .hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(6px, -6px);
+    }
+
+    .nav-drawer {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 250px;
+      height: 100vh;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+      z-index: 1001;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      padding: 20px;
+    }
+
+    .nav-drawer.active {
+      transform: translateX(0);
+    }
+
+    .nav-drawer button {
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      background: var(--blur-bg);
+      color: var(--text);
+      border-radius: 12px;
+      font-size: 17px;
+      cursor: pointer;
+      transition: 0.2s;
+      text-align: left;
+      font-weight: 500;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .nav-drawer button:active {
+      transform: scale(0.98);
+    }
+
+    .nav-drawer button.active {
+      background: var(--accent-strong);
+      color: var(--bg);
+      border-color: transparent;
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .overlay.active {
+      opacity: 1;
+    }
+
+    .view {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .view.active {
+      display: flex;
+    }
+
+    .chat-window {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .chat-window::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .chat-window::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    .message {
+      display: flex;
+      width: 100%;
+    }
+
+    .message.ai { justify-content: flex-start; }
+    .message.user { justify-content: flex-end; }
+
+    .bubble {
+      width: auto;
+      max-width: min(640px, 90%);
+      padding: 10px 14px;
+      border-radius: 14px;
+      line-height: 1.45;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(10px);
+      color: var(--text);
+    }
+
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 10px 14px;
+      align-items: center;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      animation: typing 1.4s infinite;
+    }
+
+    .typing-dot:nth-child(1) { animation-delay: 0s; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+      0%, 60%, 100% { opacity: 0.5; transform: translateY(0); }
+      30% { opacity: 1; transform: translateY(-10px); }
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      body {
+        padding: 0;
+      }
+
+      .app {
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        border-radius: 0;
+        padding: 16px 12px;
+      }
+
+      .header {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .branding h1 {
+        font-size: 22px;
+      }
+
+      .branding p {
+        font-size: 13px;
+        display: none;
+      }
+
+      .endpoint {
+        display: none;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .nav {
+        display: none;
+      }
+
+      .nav-drawer,
+      .overlay {
+        display: block;
+      }
+
+      .bubble {
+        font-size: 15px;
+        max-width: 85%;
+        max-width: 82%;
+        padding: 12px 16px;
+        line-height: 1.5;
+      }
+
+      .profile-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .profile-grid input {
+        font-size: 16px;
+        padding: 12px;
+      }
+
+      .profile-actions button {
+        font-size: 16px;
+        padding: 12px;
+      }
+
+      #message-input {
+        font-size: 16px;
+        padding: 12px 8px;
+        min-height: 44px;
+      }
+
+      #send-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 22px;
+      }
+
+      .input-zone {
+        padding: 6px 12px;
+        min-height: 60px;
+      }
+
+      #chats-list > div {
+        padding: 14px;
+      }
+
+      #new-chat-btn, #clear-chats-btn {
+        font-size: 16px;
+        padding: 12px 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .app {
+        padding: 12px 10px;
+      }
+
+      .branding h1 {
+        font-size: 20px;
+      }
+
+      .branding p {
+        font-size: 13px;
+      }
+
+      .bubble {
+        font-size: 15px;
+        padding: 10px 14px;
+      }
+
+      #message-input {
+        font-size: 16px;
+        min-height: 48px;
+        padding: 14px 10px;
+      }
+
+      #send-btn {
+        width: 50px;
+        height: 50px;
+      }
+
+      .input-zone {
+        padding: 8px 14px;
+        min-height: 66px;
+      }
+    }
+
+    .message.user .bubble {
+      background: rgba(0,0,0,0.75);
+      color: var(--bg);
+      border-bottom-right-radius: 5px;
+      border-color: transparent;
+      backdrop-filter: blur(10px);
+    }
+
+    @media (prefers-color-scheme: light) {
+      .message.user .bubble {
+        background: rgba(0,0,0,0.9);
+        color: #fff;
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .message.user .bubble {
+        color: #f5f5f7;
+      }
+    }
+
+    .message.ai .bubble {
+      border-bottom-left-radius: 5px;
+    }
+
+    .input-zone {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2px 8px;
+      background: var(--blur-bg);
+      gap: 10px;
+      backdrop-filter: blur(16px);
+      position: relative;
+      z-index: 10;
+    }
+
+    #message-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 16px;
+      padding: 8px 4px;
+      outline: none;
+      resize: none;
+      min-height: 40px;
+      max-height: 160px;
+      -webkit-appearance: none;
+      appearance: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    #message-input::placeholder {
+      color: var(--muted);
+      opacity: 0.8;
+    }
+
+    #send-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      border: none;
+      background: var(--accent-strong);
+      color: var(--bg);
+      font-size: 20px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      flex-shrink: 0;
+    }
+
+    #send-btn:active {
+      transform: scale(0.94);
+    }
+
+    .profile-form {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .profile-form label {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .profile-form input,
+    .profile-form textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--blur-bg);
+      color: var(--text);
+      font-size: 15px;
+    }
+
+    .profile-form textarea {
+      min-height: 80px;
+      resize: none;
+    }
+
+    .profile-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .profile-actions button {
+      border: none;
+      border-radius: 14px;
+      padding: 10px 18px;
+      background: var(--accent-strong);
+      color: var(--bg);
+      cursor: pointer;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div class="branding">
+        <h1>IA Bancaire</h1>
+        <p id="profile-summary">Passe sur l'onglet Profil pour me connaître.</p>
+      </div>
+      <div class="endpoint">
+        <label>Endpoint API</label>
+        <input id="endpoint-input" placeholder="http://localhost:5002/ask">
+      </div>
+      <div class="hamburger" id="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="nav-drawer" id="nav-drawer">
+      <button id="drawer-chat" class="active">💬 Chat</button>
+      <button id="drawer-history">📚 Historique</button>
+      <button id="drawer-data">📊 Données</button>
+      <button id="drawer-profile">👤 Profil</button>
+    </div>
+
+    <div class="nav">
+      <button id="nav-chat" class="active">Chat</button>
+      <button id="nav-history">Historique</button>
+      <button id="nav-data">Données</button>
+      <button id="nav-profile">Profil</button>
+    </div>
+
+    <div id="chat-view" class="view active">
+      <div class="chat-window" id="chat-window"></div>
+      <form id="chat-form" class="input-zone">
+        <textarea id="message-input" placeholder="Parle-moi de ton budget..."></textarea>
+        <button id="send-btn" type="submit">➤</button>
+      </form>
+    </div>
+
+    <div id="profile-view" class="view">
+      <form id="profile-form" class="profile-form">
+        <div>
+          <label for="first-name">Prénom</label>
+          <input id="first-name" placeholder="Alex">
+        </div>
+        <div>
+          <label for="last-name">Nom</label>
+          <input id="last-name" placeholder="Dupont">
+        </div>
+        <div>
+          <label for="profile-balance">Solde actuel (€)</label>
+          <input id="profile-balance" type="number" placeholder="1500" step="0.01">
+          <p style="font-size: 12px; color: var(--muted); margin-top: 4px;">💡 Dis-moi "J'ai 200 euros sur mon compte" et je le sauvegarderai automatiquement</p>
+        </div>
+        <div>
+          <label for="profile-income">Revenu mensuel (€)</label>
+          <input id="profile-income" type="number" placeholder="2500">
+        </div>
+        <div>
+          <label for="profile-expenses">Postes de dépenses</label>
+          <textarea id="profile-expenses" placeholder="loyer:900, bouffe:250, par mois je dépense 80€ en abonnements"></textarea>
+        </div>
+        <div class="profile-actions">
+          <button type="submit">Sauvegarder</button>
+          <button type="button" id="reset-profile-btn" style="background: rgba(255, 0, 0, 0.563); margin-left: 10px;">Reset</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="history-view" class="view">
+      <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
+        <div id="history-list" style="display: flex; flex-direction: column; gap: 12px;"></div>
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 12px;">
+        <button id="new-chat-btn" style="flex: 1; border: none; border-radius: 14px; padding: 10px 18px; background: var(--accent-strong); color: var(--bg); cursor: pointer; font-weight: 600;">Nouveau chat</button>
+        <button id="clear-history-btn" style="flex: 1; border: none; border-radius: 14px; padding: 10px 18px; background: rgba(255,0,0,0.2); color: var(--text); cursor: pointer; font-weight: 600;">Tout supprimer</button>
+      </div>
+    </div>
+
+    <div id="data-view" class="view">
+      <div style="flex: 1; overflow-y: auto;">
+        <h2 style="margin-top: 0;">📊 Mes données financières</h2>
+        
+        <div style="margin-bottom: 24px;">
+          <h3 style="margin-bottom: 12px;">💰 Solde</h3>
+          <div id="balance-display" style="padding: 16px; background: var(--blur-bg); border-radius: 14px; border: 1px solid var(--border);">
+            <p style="margin: 0; font-size: 24px; font-weight: 600;">0.00 €</p>
+            <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--muted);">Mis à jour automatiquement</p>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="margin: 0;">🧾 Transactions</h3>
+            <button id="add-transaction-btn" style="border: none; background: var(--accent-strong); color: var(--bg); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 13px;">+ Ajouter</button>
+          </div>
+          <div id="transactions-list" style="display: flex; flex-direction: column; gap: 8px;">
+            <p style="color: var(--muted); text-align: center; padding: 20px;">Aucune transaction. Dis-moi "J'ai payé 20€ de bouffe" et je l'enregistrerai !</p>
+          </div>
+        </div>
+
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="margin: 0;">📝 Autres données</h3>
+            <button id="add-other-btn" style="border: none; background: var(--accent-strong); color: var(--bg); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 13px;">+ Ajouter</button>
+          </div>
+          <div id="other-list" style="display: flex; flex-direction: column; gap: 8px;">
+            <p style="color: var(--muted); text-align: center; padding: 20px;">Aucune donnée enregistrée</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const chatWindow = document.getElementById('chat-window');
+    const chatForm = document.getElementById('chat-form');
+    const messageInput = document.getElementById('message-input');
+    const endpointInput = document.getElementById('endpoint-input');
+    const navChat = document.getElementById('nav-chat');
+    const navProfile = document.getElementById('nav-profile');
+    const chatView = document.getElementById('chat-view');
+    const profileView = document.getElementById('profile-view');
+    const profileForm = document.getElementById('profile-form');
+    const summary = document.getElementById('profile-summary');
+    const firstName = document.getElementById('first-name');
+    const lastName = document.getElementById('last-name');
+    const balanceInput = document.getElementById('profile-balance');
+    const incomeInput = document.getElementById('profile-income');
+    const expensesInput = document.getElementById('profile-expenses');
+    
+    const navHistory = document.getElementById('nav-history');
+    const navData = document.getElementById('nav-data');
+    const historyView = document.getElementById('history-view');
+    const dataView = document.getElementById('data-view');
+    const historyList = document.getElementById('history-list');
+    const balanceDisplay = document.getElementById('balance-display');
+    const transactionsList = document.getElementById('transactions-list');
+    const otherList = document.getElementById('other-list');
+
+    // Menu hamburger pour mobile
+    const hamburger = document.getElementById('hamburger');
+    const navDrawer = document.getElementById('nav-drawer');
+    const overlay = document.getElementById('overlay');
+    const drawerChat = document.getElementById('drawer-chat');
+    const drawerHistory = document.getElementById('drawer-history');
+    const drawerData = document.getElementById('drawer-data');
+    const drawerProfile = document.getElementById('drawer-profile');
+
+    function toggleDrawer() {
+      hamburger.classList.toggle('active');
+      navDrawer.classList.toggle('active');
+      overlay.classList.toggle('active');
+    }
+
+    function closeDrawer() {
+      hamburger.classList.remove('active');
+      navDrawer.classList.remove('active');
+      overlay.classList.remove('active');
+    }
+
+    hamburger.addEventListener('click', toggleDrawer);
+    overlay.addEventListener('click', closeDrawer);
+
+    drawerChat.addEventListener('click', () => {
+      switchView('chat');
+      updateDrawerButtons('chat');
+      closeDrawer();
+    });
+
+    drawerHistory.addEventListener('click', () => {
+      switchView('history');
+      updateDrawerButtons('history');
+      closeDrawer();
+    });
+
+    drawerData.addEventListener('click', () => {
+      switchView('data');
+      updateDrawerButtons('data');
+      closeDrawer();
+    });
+
+    drawerProfile.addEventListener('click', () => {
+      switchView('profile');
+      updateDrawerButtons('profile');
+      closeDrawer();
+    });
+
+    function updateDrawerButtons(active) {
+      [drawerChat, drawerHistory, drawerData, drawerProfile].forEach(btn => btn.classList.remove('active'));
+      if (active === 'chat') drawerChat.classList.add('active');
+      else if (active === 'history') drawerHistory.classList.add('active');
+      else if (active === 'data') drawerData.classList.add('active');
+      else if (active === 'profile') drawerProfile.classList.add('active');
+    }
+
+    const ENDPOINT_KEY = 'assistant_api_endpoint';
+    const PROFILE_KEY = 'assistant_profile';
+    const USER_DATA_KEY = 'assistant_user_data';
+    const CHATS_KEY = 'assistant_chats';
+
+    // Auto-detect endpoint based on current hostname
+    let defaultEndpoint;
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      defaultEndpoint = 'http://localhost:5002/ask';
+    } else if (window.location.hostname.includes('trycloudflare.com')) {
+      // Si on est sur Cloudflare tunnel, utiliser l'URL API Cloudflare
+      defaultEndpoint = 'https://meet-fur-whom-fwd.trycloudflare.com/ask';
+    } else {
+      defaultEndpoint = `http://${window.location.hostname}:5002/ask`;
+    }
+
+    endpointInput.value = localStorage.getItem(ENDPOINT_KEY) || defaultEndpoint;
+    endpointInput.addEventListener('change', () => {
+      localStorage.setItem(ENDPOINT_KEY, endpointInput.value.trim());
+    });
+
+    function appendMessage(text, role) {
+      const container = document.createElement('div');
+      container.className = `message ${role}`;
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.style.whiteSpace = 'pre-wrap';
+      bubble.textContent = text;
+      container.appendChild(bubble);
+      chatWindow.appendChild(container);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+      return container;
+    }
+
+    function appendTypingIndicator() {
+      const container = document.createElement('div');
+      container.className = 'message ai';
+      container.id = 'typing-indicator';
+      const bubble = document.createElement('div');
+      bubble.className = 'typing-indicator';
+      
+      for (let i = 0; i < 3; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'typing-dot';
+        bubble.appendChild(dot);
+      }
+      
+      container.appendChild(bubble);
+      chatWindow.appendChild(container);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+      return container;
+    }
+
+    function removeTypingIndicator() {
+      const indicator = document.getElementById('typing-indicator');
+      if (indicator) indicator.remove();
+    }
+
+    async function sendMessage(text) {
+      appendMessage(text, 'user');
+      messageInput.value = '';
+      appendTypingIndicator();
+      
+      try {
+        // Récupérer le profil et les données utilisateur
+        const profile = getProfile();
+        const userData = getUserData();
+        
+        const response = await fetch(endpointInput.value.trim(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            message: text,
+            profile: {
+              income: profile.income || 0,
+              expenses: profile.expenses || 0,
+              name: profile.firstName && profile.lastName ? `${profile.firstName} ${profile.lastName}` : null
+            },
+            userData: userData
+          })
+        });
+        
+        removeTypingIndicator();
+        
+        if (!response.ok) throw new Error(`Erreur serveur ${response.status}`);
+        const data = await response.json();
+        appendMessage(data.response, 'ai');
+        
+        // Mettre à jour les données si Gemini a détecté quelque chose
+        if (data.detectedData) {
+          const currentData = getUserData();
+          
+          if (data.detectedData.balance !== undefined) {
+            currentData.balance = data.detectedData.balance;
+            // Sync avec profil
+            const prof = getProfile();
+            prof.balance = data.detectedData.balance;
+            localStorage.setItem(PROFILE_KEY, JSON.stringify(prof));
+            balanceInput.value = data.detectedData.balance;
+          }
+          
+          if (data.detectedData.transaction) {
+            currentData.balance += data.detectedData.transaction.amount;
+            currentData.transactions.push({
+              amount: data.detectedData.transaction.amount,
+              description: data.detectedData.transaction.description,
+              date: new Date().toLocaleString()
+            });
+            // Sync balance avec profil
+            const prof = getProfile();
+            prof.balance = currentData.balance;
+            localStorage.setItem(PROFILE_KEY, JSON.stringify(prof));
+            balanceInput.value = currentData.balance;
+          }
+          
+          if (data.detectedData.other) {
+            currentData.other.push({
+              title: data.detectedData.other.title,
+              value: data.detectedData.other.value,
+              date: new Date().toLocaleString()
+            });
+          }
+          
+          saveUserData(currentData);
+        }
+      } catch (err) {
+        removeTypingIndicator();
+        appendMessage(`Erreur: ${err.message}`, 'ai');
+      }
+    }
+
+    chatForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const text = messageInput.value.trim();
+      if (!text) return;
+      sendMessage(text);
+    });
+
+    messageInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        const text = messageInput.value.trim();
+        if (!text) return;
+        sendMessage(text);
+      }
+    });
+
+    function switchView(target) {
+      // Désactiver toutes les vues et boutons
+      chatView.classList.remove('active');
+      historyView.classList.remove('active');
+      dataView.classList.remove('active');
+      profileView.classList.remove('active');
+      document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+      
+      // Activer la vue ciblée
+      if (target === 'chat') {
+        chatView.classList.add('active');
+        if (navChat) navChat.classList.add('active');
+        updateDrawerButtons('chat');
+      } else if (target === 'history') {
+        historyView.classList.add('active');
+        if (navHistory) navHistory.classList.add('active');
+        renderHistoryList();
+        updateDrawerButtons('history');
+      } else if (target === 'data') {
+        dataView.classList.add('active');
+        if (navData) navData.classList.add('active');
+        updateDataDisplay();
+        updateDrawerButtons('data');
+      } else if (target === 'profile') {
+        profileView.classList.add('active');
+        if (navProfile) navProfile.classList.add('active');
+        updateDrawerButtons('profile');
+      }
+    }
+
+    navChat.addEventListener('click', () => switchView('chat'));
+    navProfile.addEventListener('click', () => switchView('profile'));
+
+    function getProfile() {
+      const raw = localStorage.getItem(PROFILE_KEY);
+      if (!raw) return {};
+      try {
+        return JSON.parse(raw);
+      } catch {
+        return {};
+      }
+    }
+
+    function getUserData() {
+      const raw = localStorage.getItem(USER_DATA_KEY);
+      if (!raw) return { balance: 0, transactions: [], other: [] };
+      try {
+        return JSON.parse(raw);
+      } catch {
+        return { balance: 0, transactions: [], other: [] };
+      }
+    }
+
+    function saveUserData(data) {
+      localStorage.setItem(USER_DATA_KEY, JSON.stringify(data));
+      updateDataDisplay();
+    }
+
+    function loadProfile() {
+      const data = getProfile();
+      if (!data || Object.keys(data).length === 0) return;
+      firstName.value = data.firstName || "";
+      lastName.value = data.lastName || "";
+      balanceInput.value = data.balance || "";
+      incomeInput.value = data.income || "";
+      expensesInput.value = data.expenses || "";
+      updateSummary(data);
+    }
+
+    function updateSummary(profile) {
+      const name = [profile.firstName, profile.lastName].filter(Boolean).join(" ").trim();
+      const income = profile.income ? `${profile.income} €/mois` : "revenu ?";
+      summary.textContent = name ? `${name} — ${income}` : "Passe sur l'onglet Profil pour me connaître.";
+    }
+
+    loadProfile();
+    updateDataDisplay();
+
+    profileForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const profile = {
+        firstName: firstName.value.trim(),
+        lastName: lastName.value.trim(),
+        balance: balanceInput.value.trim(),
+        income: incomeInput.value.trim(),
+        expenses: expensesInput.value.trim()
+      };
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      
+      // Sync balance avec user_data
+      const userData = getUserData();
+      if (profile.balance) {
+        userData.balance = parseFloat(profile.balance);
+        saveUserData(userData);
+      }
+      
+      updateSummary(profile);
+      alert('Profil sauvegardé !');
+    });
+
+    document.getElementById('reset-profile-btn').addEventListener('click', () => {
+      if (confirm('Supprimer toutes tes données de profil ET données enregistrées ?')) {
+        localStorage.removeItem(PROFILE_KEY);
+        localStorage.removeItem(USER_DATA_KEY);
+        firstName.value = '';
+        lastName.value = '';
+        balanceInput.value = '';
+        incomeInput.value = '';
+        expensesInput.value = '';
+        summary.textContent = "Passe sur l'onglet Profil pour me connaître.";
+        updateDataDisplay();
+        alert('Profil et données réinitialisés !');
+      }
+    });
+
+    // AFFICHAGE DES DONNÉES 
+    function updateDataDisplay() {
+      const data = getUserData();
+      
+      // Balance
+      balanceDisplay.innerHTML = `
+        <p style="margin: 0; font-size: 24px; font-weight: 600;">${data.balance.toFixed(2)} €</p>
+        <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--muted);">Mis à jour automatiquement</p>
+      `;
+      
+      // Transactions
+      if (data.transactions.length === 0) {
+        transactionsList.innerHTML = '<p style="color: var(--muted); text-align: center; padding: 20px;">Aucune transaction. Dis-moi "J\'ai payé 20€ de bouffe" et je l\'enregistrerai !</p>';
+      } else {
+        transactionsList.innerHTML = data.transactions.map((t, i) => `
+          <div style="padding: 12px; background: var(--blur-bg); border-radius: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <p style="margin: 0; font-weight: 600; color: ${t.amount >= 0 ? 'green' : 'red'};">${t.amount >= 0 ? '+' : ''}${t.amount.toFixed(2)} €</p>
+              <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--text);">${t.description}</p>
+              <p style="margin: 2px 0 0 0; font-size: 11px; color: var(--muted);">${t.date}</p>
+            </div>
+            <button onclick="deleteTransaction(${i})" style="border: none; background: rgba(255,0,0,0.2); color: var(--text); border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 12px;">✕</button>
+          </div>
+        `).join('');
+      }
+      
+      // Other
+      if (data.other.length === 0) {
+        otherList.innerHTML = '<p style="color: var(--muted); text-align: center; padding: 20px;">Aucune donnée enregistrée</p>';
+      } else {
+        otherList.innerHTML = data.other.map((item, i) => `
+          <div style="padding: 12px; background: var(--blur-bg); border-radius: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <div style="flex: 1;">
+              <p style="margin: 0; font-weight: 600;">${item.title}</p>
+              <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--muted);">${item.value}</p>
+              <p style="margin: 2px 0 0 0; font-size: 11px; color: var(--muted);">${item.date}</p>
+            </div>
+            <button onclick="deleteOther(${i})" style="border: none; background: rgba(255,0,0,0.2); color: var(--text); border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 12px;">✕</button>
+          </div>
+        `).join('');
+      }
+    }
+
+    function deleteTransaction(index) {
+      const data = getUserData();
+      data.transactions.splice(index, 1);
+      saveUserData(data);
+    }
+
+    function deleteOther(index) {
+      const data = getUserData();
+      data.other.splice(index, 1);
+      saveUserData(data);
+    }
+
+    document.getElementById('add-transaction-btn').addEventListener('click', () => {
+      const amount = prompt('Montant (€) - positif pour crédit, négatif pour débit:');
+      const description = prompt('Description:');
+      if (amount && description) {
+        const data = getUserData();
+        const parsedAmount = parseFloat(amount);
+        data.balance += parsedAmount;
+        data.transactions.push({
+          amount: parsedAmount,
+          description: description,
+          date: new Date().toLocaleString()
+        });
+        saveUserData(data);
+        
+        // Update profile balance
+        const profile = getProfile();
+        profile.balance = data.balance;
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+        balanceInput.value = data.balance;
+      }
+    });
+
+    document.getElementById('add-other-btn').addEventListener('click', () => {
+      const title = prompt('Titre:');
+      const value = prompt('Valeur:');
+      if (title && value) {
+        const data = getUserData();
+        data.other.push({
+          title: title,
+          value: value,
+          date: new Date().toLocaleString()
+        });
+        saveUserData(data);
+      }
+    });
+
+    // ====== GESTION DES CONVERSATIONS ======
+
+    let currentChatId = null;
+
+    function generateChatId() {
+      return Date.now().toString();
+    }
+
+    function getChats() {
+      try {
+        return JSON.parse(localStorage.getItem(CHATS_KEY)) || {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveChats(chats) {
+      localStorage.setItem(CHATS_KEY, JSON.stringify(chats));
+    }
+
+    function saveCurrentChat(messages) {
+      if (!currentChatId) return;
+      const chats = getChats();
+      const firstMsg = messages.find(m => m.role === 'user')?.text || 'Chat sans titre';
+      chats[currentChatId] = {
+        id: currentChatId,
+        title: firstMsg.substring(0, 40),
+        messages: messages,
+        date: new Date().toLocaleString()
+      };
+      saveChats(chats);
+    }
+
+    function getAllMessages() {
+      const msgs = [];
+      const elements = chatWindow.querySelectorAll('.message');
+      elements.forEach(el => {
+        const text = el.querySelector('.bubble').textContent;
+        const role = el.classList.contains('user') ? 'user' : 'ai';
+        msgs.push({ role, text });
+      });
+      return msgs;
+    }
+
+    function loadChat(chatId) {
+      const chats = getChats();
+      const chat = chats[chatId];
+      if (!chat) return;
+
+      currentChatId = chatId;
+      chatWindow.innerHTML = '';
+      
+      chat.messages.forEach(msg => {
+        appendMessage(msg.text, msg.role);
+      });
+
+      switchView('chat');
+    }
+    
+    // Exposer les fonctions pour les onclick inline
+    window.loadChat = loadChat;
+    window.deleteChat = deleteChat;
+    window.deleteTransaction = deleteTransaction;
+    window.deleteOther = deleteOther;
+
+    function renderHistoryList() {
+      const chats = getChats();
+      historyList.innerHTML = '';
+
+      const chatArray = Object.values(chats).sort((a, b) => b.id - a.id);
+
+      if (chatArray.length === 0) {
+        historyList.innerHTML = '<p style="color: var(--muted); text-align: center; padding: 20px;">Aucune conversation sauvegardée</p>';
+        return;
+      }
+
+      chatArray.forEach(chat => {
+        const item = document.createElement('div');
+        item.style.cssText = 'border: 1px solid var(--border); border-radius: 14px; padding: 12px; cursor: pointer; transition: 0.2s; background: var(--blur-bg);';
+        item.onmouseover = () => item.style.background = 'rgba(0,0,0,0.1)';
+        item.onmouseout = () => item.style.background = 'var(--blur-bg)';
+        
+        item.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: start; gap: 10px;">
+            <div style="flex: 1; cursor: pointer;" onclick="loadChat('${chat.id}')">
+              <p style="margin: 0 0 4px 0; font-weight: 600; color: var(--text);">${chat.title}</p>
+              <p style="margin: 0; font-size: 12px; color: var(--muted);">${chat.date}</p>
+            </div>
+            <button onclick="deleteChat('${chat.id}')" style="border: none; background: rgba(255,0,0,0.2); color: var(--text); border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 12px;">✕</button>
+          </div>
+        `;
+        
+        historyList.appendChild(item);
+      });
+    }
+
+    function deleteChat(chatId) {
+      const chats = getChats();
+      delete chats[chatId];
+      saveChats(chats);
+      renderHistoryList();
+    }
+
+    navHistory.addEventListener('click', () => switchView('history'));
+    navData.addEventListener('click', () => switchView('data'));
+
+    newChatBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      chatWindow.innerHTML = '';
+      currentChatId = generateChatId();
+      switchView('chat');
+    });
+
+    document.getElementById('clear-history-btn').addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (confirm('Supprimer toutes les conversations ?')) {
+        localStorage.removeItem(CHATS_KEY);
+        renderHistoryList();
+      }
+    });
+
+    // Override sendMessage to save chats
+    const originalSendMessage = sendMessage;
+    sendMessage = async function(text) {
+      await originalSendMessage(text);
+      saveCurrentChat(getAllMessages());
+    };
+  </script>
+</body>
+</html>
 
